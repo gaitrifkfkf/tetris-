@@ -1,0 +1,611 @@
+<html><head><base href="." target="_blank">
+<style>
+:root {
+  --pink-ribbon: #FF69B4;
+  --dark-pink: #FF1493;
+}
+
+.game-title {
+  font-size: 48px;
+  color: var(--dark-pink);
+  text-align: center;
+  font-weight: bold;
+  margin: 20px 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: 'Arial Black', sans-serif;
+  letter-spacing: 4px;
+}
+
+.game-title span {
+  display: inline-block;
+  animation: bounce 0.5s ease infinite alternate;
+  animation-delay: calc(0.1s * var(--i));
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-10px); }
+}
+
+body {
+  background: #fde1e8;
+  background-image: 
+    linear-gradient(rgba(255, 105, 180, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 105, 180, 0.2) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-position: center center;
+  background-attachment: fixed;
+  background-color: #fde1e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+.game-container {
+  position: relative;
+  width: 300px;
+  margin: 20px auto;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+#gameCanvas {
+  border: 4px solid var(--pink-ribbon);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.start-btn {
+  background: var(--dark-pink);
+  border: none;
+  border-radius: 25px;
+  color: white;
+  padding: 15px 40px;
+  font-size: 24px;
+  cursor: pointer;
+  margin: 20px 0;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  font-weight: bold;
+  letter-spacing: 2px;
+  box-shadow: 0 4px 8px rgba(255, 20, 147, 0.3);
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 20, 147, 0.4);
+}
+
+.start-btn:active {
+  transform: translateY(1px);
+}
+
+.score-board {
+  background: white;
+  padding: 20px;
+  border: 4px solid var(--pink-ribbon);
+  border-radius: 10px;
+  color: var(--dark-pink);
+  font-size: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.score-value, .level-value {
+  display: block;
+  font-size: 36px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+@keyframes shine {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(255, 105, 180, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(255, 105, 180, 0.8));
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(180deg);
+  }
+}
+
+.ribbon {
+  width: 150px;
+  height: 150px;
+  margin: 20px auto;
+  animation: shine 2s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.3));
+}
+
+.sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  width: 300px;
+  margin: 20px auto;
+}
+
+.control-btn {
+  background: var(--pink-ribbon);
+  border: none;
+  border-radius: 5px;
+  color: white;
+  padding: 15px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.control-btn:hover {
+  background: var(--dark-pink);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.control-btn.center {
+  grid-column: 2;
+}
+
+.next-piece-box {
+  background: white;
+  padding: 10px;
+  border: 4px solid var(--pink-ribbon);
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.next-piece-label {
+  color: var(--dark-pink);
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+#nextPieceCanvas {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.saved-piece-box {
+  background: white;
+  padding: 10px;
+  border: 4px solid var(--pink-ribbon);
+  border-radius: 10px;
+  margin-top: 20px;
+}
+
+.saved-piece-label {
+  color: var(--dark-pink);
+  font-size: 20px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+#savedPieceCanvas {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.control-btn.swap {
+  background: var(--dark-pink);
+}
+</style>
+</head>
+<body>
+<svg class="ribbon" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="shine" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:white;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:white;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  <path d="M50 10 C 40 30, 10 40, 10 60 C 10 80, 30 90, 50 90 C 70 90, 90 80, 90 60 C 90 40, 60 30, 50 10" 
+        fill="var(--pink-ribbon)" />
+  <circle cx="50" cy="45" r="8" fill="white"/>
+  <circle class="sparkle" cx="30" cy="40" r="2" fill="white" style="animation-delay: 0s"/>
+  <circle class="sparkle" cx="70" cy="40" r="2" fill="white" style="animation-delay: 0.5s"/>
+  <circle class="sparkle" cx="50" cy="70" r="2" fill="white" style="animation-delay: 1s"/>
+  <circle class="sparkle" cx="20" cy="60" r="2" fill="white" style="animation-delay: 1.5s"/>
+  <circle class="sparkle" cx="80" cy="60" r="2" fill="white" style="animation-delay: 0.75s"/>
+  <circle cx="50" cy="45" r="15" fill="url(#shine)" opacity="0.5"/>
+  <path d="M30 80 Q 50 95, 70 80" stroke="var(--dark-pink)" fill="none" stroke-width="2"/>
+</svg>
+<button class="start-btn" id="startBtn">Start Game</button>
+<div class="game-title">
+  <span style="--i: 1">T</span>
+  <span style="--i: 2">E</span>
+  <span style="--i: 3">T</span>
+  <span style="--i: 4">R</span>
+  <span style="--i: 5">I</span>
+  <span style="--i: 6">S</span>
+</div>
+<div class="game-container">
+  <canvas id="gameCanvas" width="300" height="600"></canvas>
+  <div class="score-board">
+    <div>
+      Score
+      <span id="score" class="score-value">0</span>
+    </div>
+    <div>
+      Level
+      <span id="level" class="level-value">1</span>
+    </div>
+    <div class="saved-piece-box">
+      <div class="saved-piece-label">Saved</div>
+      <canvas id="savedPieceCanvas" width="120" height="120"></canvas>
+    </div>
+    <div class="next-piece-box">
+      <div class="next-piece-label">Next</div>
+      <canvas id="nextPieceCanvas" width="120" height="120"></canvas>
+    </div>
+  </div>
+</div>
+<div class="controls">
+  <button class="control-btn" id="leftBtn">←</button>
+  <button class="control-btn center" id="rotateBtn">↻</button>
+  <button class="control-btn" id="rightBtn">→</button>
+  <button class="control-btn" id="downBtn">↓</button>
+  <button class="control-btn swap" id="swapBtn">⟲</button>
+</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const nextCanvas = document.getElementById('nextPieceCanvas');
+const savedCanvas = document.getElementById('savedPieceCanvas');
+const ctx = canvas.getContext('2d');
+const nextCtx = nextCanvas.getContext('2d');
+const savedCtx = savedCanvas.getContext('2d');
+const BLOCK_SIZE = 30;
+const NEXT_BLOCK_SIZE = 30;
+const ROWS = 20;
+const COLS = 10;
+let score = 0;
+let level = 1;
+let linesCleared = 0;
+let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+let currentPiece = null;
+let nextPiece = null;
+let savedPiece = null;
+let canSwap = true;
+let gameInterval = null;
+
+const PIECES = [
+  // Ribbon piece (custom)
+  [
+    [0, 1, 1],
+    [1, 1, 0],
+    [0, 1, 0]
+  ],
+  // Standard pieces
+  [[1, 1, 1, 1]],     // I
+  [[1, 1], [1, 1]],   // O
+  [[0, 1, 1], [1, 1, 0]], // S
+  [[1, 1, 0], [0, 1, 1]], // Z
+  [[1, 0, 0], [1, 1, 1]], // L
+  [[0, 0, 1], [1, 1, 1]]  // J
+];
+
+class Piece {
+  constructor(shape = null) {
+    this.shape = shape || PIECES[Math.floor(Math.random() * PIECES.length)];
+    this.x = Math.floor((COLS - this.shape[0].length) / 2);
+    this.y = 0;
+    this.color = 'var(--pink-ribbon)';
+  }
+}
+
+function drawBlock(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+  ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+}
+
+function drawBoard() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Draw placed pieces
+  for(let y = 0; y < ROWS; y++) {
+    for(let x = 0; x < COLS; x++) {
+      if(board[y][x]) {
+        drawBlock(x, y, 'var(--pink-ribbon)');
+      }
+    }
+  }
+  
+  // Draw current piece
+  if(currentPiece) {
+    currentPiece.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if(value) {
+          drawBlock(currentPiece.x + x, currentPiece.y + y, currentPiece.color);
+        }
+      });
+    });
+  }
+}
+
+function drawNextPiece() {
+  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  if(nextPiece) {
+    const offsetX = (nextCanvas.width - nextPiece.shape[0].length * NEXT_BLOCK_SIZE) / 2;
+    const offsetY = (nextCanvas.height - nextPiece.shape.length * NEXT_BLOCK_SIZE) / 2;
+    
+    nextPiece.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if(value) {
+          nextCtx.fillStyle = nextPiece.color;
+          nextCtx.fillRect(
+            offsetX + x * NEXT_BLOCK_SIZE, 
+            offsetY + y * NEXT_BLOCK_SIZE, 
+            NEXT_BLOCK_SIZE - 1, 
+            NEXT_BLOCK_SIZE - 1
+          );
+          nextCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          nextCtx.strokeRect(
+            offsetX + x * NEXT_BLOCK_SIZE, 
+            offsetY + y * NEXT_BLOCK_SIZE, 
+            NEXT_BLOCK_SIZE - 1, 
+            NEXT_BLOCK_SIZE - 1
+          );
+        }
+      });
+    });
+  }
+}
+
+function drawSavedPiece() {
+  savedCtx.clearRect(0, 0, savedCanvas.width, savedCanvas.height);
+  if(savedPiece) {
+    const offsetX = (savedCanvas.width - savedPiece.shape[0].length * NEXT_BLOCK_SIZE) / 2;
+    const offsetY = (savedCanvas.height - savedPiece.shape.length * NEXT_BLOCK_SIZE) / 2;
+    
+    savedPiece.shape.forEach((row, y) => {
+      row.forEach((value, x) => {
+        if(value) {
+          savedCtx.fillStyle = savedPiece.color;
+          savedCtx.fillRect(
+            offsetX + x * NEXT_BLOCK_SIZE, 
+            offsetY + y * NEXT_BLOCK_SIZE, 
+            NEXT_BLOCK_SIZE - 1, 
+            NEXT_BLOCK_SIZE - 1
+          );
+          savedCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+          savedCtx.strokeRect(
+            offsetX + x * NEXT_BLOCK_SIZE, 
+            offsetY + y * NEXT_BLOCK_SIZE, 
+            NEXT_BLOCK_SIZE - 1, 
+            NEXT_BLOCK_SIZE - 1
+          );
+        }
+      });
+    });
+  }
+}
+
+function canMove(piece, dx, dy) {
+  return piece.shape.every((row, y) => {
+    return row.every((value, x) => {
+      let newX = piece.x + x + dx;
+      let newY = piece.y + y + dy;
+      return !value ||
+        (newX >= 0 && newX < COLS &&
+         newY < ROWS &&
+         !(newY >= 0 && board[newY][newX]));
+    });
+  });
+}
+
+function merge() {
+  currentPiece.shape.forEach((row, y) => {
+    row.forEach((value, x) => {
+      if(value) {
+        board[currentPiece.y + y][currentPiece.x + x] = value;
+      }
+    });
+  });
+}
+
+function updateLevel() {
+  level = Math.floor(linesCleared / 10) + 1;
+  document.getElementById('level').textContent = level;
+  clearInterval(gameInterval);
+  gameInterval = setInterval(tick, Math.max(100, 1000 - (level - 1) * 100));
+}
+
+function clearLines() {
+  let clearedLines = 0;
+  
+  for(let y = ROWS - 1; y >= 0; y--) {
+    if(board[y].every(value => value)) {
+      board.splice(y, 1);
+      board.unshift(Array(COLS).fill(0));
+      clearedLines++;
+      y++;
+    }
+  }
+  
+  if(clearedLines > 0) {
+    score += clearedLines * 100 * level;
+    linesCleared += clearedLines;
+    document.getElementById('score').textContent = score;
+    updateLevel();
+  }
+}
+
+function gameOver() {
+  clearInterval(gameInterval);
+  alert('Game Over! Score: ' + score);
+  board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+  score = 0;
+  level = 1;
+  linesCleared = 0;
+  document.getElementById('score').textContent = score;
+  document.getElementById('level').textContent = level;
+  nextPiece = null;
+  savedPiece = null;
+  startGame();
+}
+
+function tick() {
+  if(canMove(currentPiece, 0, 1)) {
+    currentPiece.y++;
+  } else {
+    merge();
+    clearLines();
+    createNewPiece();
+    if(!canMove(currentPiece, 0, 0)) {
+      gameOver();
+    }
+  }
+  drawBoard();
+}
+
+function createNewPiece() {
+  currentPiece = nextPiece || new Piece();
+  nextPiece = new Piece();
+  canSwap = true;
+  drawNextPiece();
+}
+
+function rotate(piece) {
+  let newShape = piece.shape[0].map((_, i) =>
+    piece.shape.map(row => row[i]).reverse()
+  );
+  
+  let newPiece = {...piece, shape: newShape};
+  if(canMove(newPiece, 0, 0)) {
+    piece.shape = newShape;
+  }
+}
+
+function swapPiece() {
+  if (!canSwap) return;
+  
+  let tempPiece = new Piece();
+  tempPiece.shape = currentPiece.shape;
+  tempPiece.color = currentPiece.color;
+  
+  if (savedPiece === null) {
+    savedPiece = tempPiece;
+    createNewPiece();
+  } else {
+    currentPiece = new Piece(savedPiece.shape);
+    savedPiece = tempPiece;
+  }
+  
+  drawSavedPiece();
+  canSwap = false;
+}
+
+document.addEventListener('keydown', event => {
+  switch(event.key) {
+    case 'ArrowLeft':
+      if(canMove(currentPiece, -1, 0)) currentPiece.x--;
+      break;
+    case 'ArrowRight':
+      if(canMove(currentPiece, 1, 0)) currentPiece.x++;
+      break;
+    case 'ArrowDown':
+      if(canMove(currentPiece, 0, 1)) currentPiece.y++;
+      break;
+    case 'ArrowUp':
+      rotate(currentPiece);
+      break;
+    case 'c':
+    case 'C':
+      swapPiece();
+      drawBoard();
+      break;
+  }
+  drawBoard();
+});
+
+// Add touch/click controls
+document.getElementById('leftBtn').addEventListener('click', () => {
+  if(canMove(currentPiece, -1, 0)) {
+    currentPiece.x--;
+    drawBoard();
+  }
+});
+
+document.getElementById('rightBtn').addEventListener('click', () => {
+  if(canMove(currentPiece, 1, 0)) {
+    currentPiece.x++;
+    drawBoard();
+  }
+});
+
+document.getElementById('downBtn').addEventListener('click', () => {
+  if(canMove(currentPiece, 0, 1)) {
+    currentPiece.y++;
+    drawBoard();
+  }
+});
+
+document.getElementById('rotateBtn').addEventListener('click', () => {
+  rotate(currentPiece);
+  drawBoard();
+});
+
+document.getElementById('swapBtn').addEventListener('click', () => {
+  swapPiece();
+  drawBoard();
+});
+
+function startGame() {
+  // Clear the board
+  board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+  // Reset score
+  score = 0;
+  document.getElementById('score').textContent = score;
+  
+  // Reset game state
+  nextPiece = new Piece();
+  savedPiece = null;
+  canSwap = true;
+  createNewPiece();
+  
+  // Reset level
+  level = 1;
+  linesCleared = 0;
+  document.getElementById('level').textContent = level;
+  
+  // Clear existing interval if any
+  if(gameInterval) {
+    clearInterval(gameInterval);
+  }
+  
+  // Start new game interval
+  gameInterval = setInterval(tick, 1000);
+  drawSavedPiece();
+  
+  // Update button text
+  document.getElementById('startBtn').textContent = 'Restart Game';
+}
+
+// Add button event listener
+document.getElementById('startBtn').addEventListener('click', () => {
+  startGame();
+});
+</script>
+</body></html>
